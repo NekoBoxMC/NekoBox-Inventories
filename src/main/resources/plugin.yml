@@ -1,0 +1,10 @@
+name: NekoBox-Inventories
+version: '${project.version}'
+main: es.nekobox.nekoboxinventories.Inventories
+api-version: '1.20'
+commands:
+    loadinventory:
+        description: Loads a player's inventory from the database.
+        usage: /loadinventory <id>
+    restore:
+        description: Restore a player's inventory from their death records.
