@@ -30,6 +30,10 @@ public class RestoreCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!sender.hasPermission("nekobox.inventories.load")) {
+            sender.sendMessage("You do not have permission to use this command.");
+        }
+
         if (!(sender instanceof Player)) {
             sender.sendMessage("Only players can use this command.");
             return true;
