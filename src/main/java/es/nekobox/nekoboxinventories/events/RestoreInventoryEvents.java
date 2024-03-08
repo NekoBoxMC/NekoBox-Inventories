@@ -2,7 +2,6 @@ package es.nekobox.nekoboxinventories.events;
 
 import es.nekobox.nekoboxinventories.utils.Database;
 import es.nekobox.nekoboxinventories.utils.LoadInventory;
-import es.nekobox.nekoboxinventories.utils.SaveInventory;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
