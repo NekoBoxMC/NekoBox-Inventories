@@ -20,12 +20,11 @@ public class RestoreInventoryEvents implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (event.getView().getTitle().startsWith("Death Records - Page")) {
-            event.setCancelled(true);
-            event.getInventory().close();
 
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem != null) {
                 if (clickedItem.getType() == Material.PAPER) {
+                    event.getInventory().close();
                     if (clickedItem.hasItemMeta()) {
                         ItemMeta meta = clickedItem.getItemMeta();
                         if (meta.hasDisplayName()) {

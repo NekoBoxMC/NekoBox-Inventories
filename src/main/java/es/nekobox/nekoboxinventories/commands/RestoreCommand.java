@@ -11,13 +11,10 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -177,6 +174,33 @@ public class RestoreCommand implements CommandExecutor {
         item.setItemMeta(meta);
         return item;
     }
+
+//    @EventHandler
+//    public void onInventoryClick(InventoryClickEvent event) {
+//        if (event.getView().getTitle().startsWith("Death Records - Page")) {
+//            event.setCancelled(true);
+//
+//            ItemStack clickedItem = event.getCurrentItem();
+//            if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
+//
+//            Player player = (Player) event.getWhoClicked();
+//            ItemMeta meta = clickedItem.getItemMeta();
+//            if (meta == null || !meta.hasDisplayName()) return;
+//
+//            String itemName = meta.getDisplayName();
+//            if (itemName.equals(NEXT_PAGE_NAME) || itemName.equals(PREVIOUS_PAGE_NAME)) {
+//                String title = event.getView().getTitle();
+//                int currentPage = Integer.parseInt(title.replaceAll("[^0-9]", ""));
+//                List<String> deathRecords = playerDeathRecordsMap.get(player.getUniqueId());
+//
+//                if (itemName.equals(NEXT_PAGE_NAME) && currentPage < getTotalPages(deathRecords)) {
+//                    openInventory(player, currentPage + 1);
+//                } else if (itemName.equals(PREVIOUS_PAGE_NAME) && currentPage > 1) {
+//                    openInventory(player, currentPage - 1);
+//                }
+//            }
+//        }
+//    }
 
     private int getTotalPages(List<String> deathRecords) {
         if (deathRecords == null) {
