@@ -164,6 +164,7 @@ public class RestoreCommand implements CommandExecutor, Listener {
         item.setItemMeta(meta);
         return item;
     }
+
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (event.getView().getTitle().startsWith("Death Records - Page")) {
