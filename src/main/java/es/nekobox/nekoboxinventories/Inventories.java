@@ -4,6 +4,7 @@ import es.nekobox.nekoboxinventories.commands.LoadInventoryCommand;
 import es.nekobox.nekoboxinventories.commands.RestoreCommand;
 import es.nekobox.nekoboxinventories.events.DeathEvents;
 import es.nekobox.nekoboxinventories.events.RestoreInventoryEvents;
+import es.nekobox.nekoboxinventories.utils.DataManager;
 import es.nekobox.nekoboxinventories.utils.Database;
 import es.nekobox.nekoboxinventories.utils.SaveInventory;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -11,11 +12,23 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public final class Inventories extends JavaPlugin {
+    private static Inventories instance;
     private Database db;
+    public DataManager config;
 
     @Override
     public void onEnable() {
-        db = new Database();
+        // General Initializers
+        if (instance == null) instance = this;
+
+        // Config
+        getConfig().options().copyDefaults();
+        saveDefaultConfig();
+
+        this.config = new DataManager(this, "config.yml");
+
+        // Database
+        db = new Database(this);
         initDatabase();
 
         SaveInventory saveInventory = new SaveInventory(db);
@@ -27,6 +40,7 @@ public final class Inventories extends JavaPlugin {
         // Events
         getServer().getPluginManager().registerEvents(new DeathEvents(saveInventory), this);
         getServer().getPluginManager().registerEvents(new RestoreInventoryEvents(db), this);
+
     }
 
     @Override
