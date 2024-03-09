@@ -17,6 +17,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class RestoreCommand implements CommandExecutor {
 
@@ -44,12 +45,19 @@ public class RestoreCommand implements CommandExecutor {
             return true;
         }
 
-        String playerName = args[0];
         Player player = (Player) sender;
+
+        Player restoredPlayer = Bukkit.getPlayer(args[0]);
+
+        if (restoredPlayer == null) {
+            sender.sendMessage("The player is not online.");
+            return true;
+        }
+
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try (Connection conn = db.getConnection()) {
                 PreparedStatement ps = conn.prepareStatement("SELECT id, date, killer_name FROM inventories WHERE player_name = ? ORDER BY unix_timestamp DESC");
-                ps.setString(1, playerName);
+                ps.setString(1, restoredPlayer.getName());
                 ResultSet rs = ps.executeQuery();
 
                 List<String> deathRecords = new ArrayList<>();
@@ -70,8 +78,7 @@ public class RestoreCommand implements CommandExecutor {
     }
 
     private void openInventory(Player player, List<String> deathRecords) {
-        int inventorySize = ((deathRecords.size() / 9) + 1) * 9;
-        Inventory inventory = Bukkit.createInventory(null, inventorySize, "Death Records");
+        Inventory inventory = Bukkit.createInventory(null, 54, "Death Records");
 
         for (String record : deathRecords) {
             ItemStack item = new ItemStack(Material.PAPER);
@@ -80,7 +87,6 @@ public class RestoreCommand implements CommandExecutor {
             String[] recordParts = record.split(" - ");
             String idPart = recordParts[0];
 
-            // Handle potential missing parts
             String killerPart = recordParts.length > 1 ? recordParts[1] : "Killer: Unknown";
             String datePart = recordParts.length > 2 ? recordParts[2] : "Date: Unknown";
 
