@@ -23,8 +23,8 @@ public class LoadInventory {
     }
 
     public void loadInventory(CommandSender sender, int id) {
-        try (Connection conn = db.getConnection()) {
-            PreparedStatement ps = conn.prepareStatement("SELECT player_uuid, inventory_contents FROM inventories WHERE id = ?");
+        Connection conn = db.getConnection();
+        try(PreparedStatement ps = conn.prepareStatement("SELECT player_uuid, inventory_contents FROM inventories WHERE id = ?")) {
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -47,9 +47,9 @@ public class LoadInventory {
             } else {
                 sender.sendMessage("Inventory with the specified ID not found.");
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            sender.sendMessage("An error occurred while loading the inventory.");
+        }
+        catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
