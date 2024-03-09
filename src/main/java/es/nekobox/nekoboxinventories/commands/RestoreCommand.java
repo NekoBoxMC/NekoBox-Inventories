@@ -11,12 +11,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -186,10 +184,6 @@ public class RestoreCommand implements CommandExecutor, Listener {
                 int currentPage = Integer.parseInt(title.replaceAll("[^0-9]", ""));
                 List<String> deathRecords = playerDeathRecordsMap.get(player.getUniqueId());
 
-                if (deathRecords == null) {
-                    return;
-                }
-
                 if (itemName.equals(NEXT_PAGE_NAME) && currentPage < getTotalPages(deathRecords)) {
                     openInventory(player, currentPage + 1);
                 } else if (itemName.equals(PREVIOUS_PAGE_NAME) && currentPage > 1) {
@@ -204,12 +198,5 @@ public class RestoreCommand implements CommandExecutor, Listener {
             return 0;
         }
         return (int) Math.ceil((double) deathRecords.size() / ITEMS_PER_PAGE);
-    }
-
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        if (event.getView().getTitle().startsWith("Death Records - Page")) {
-            playerDeathRecordsMap.remove(event.getPlayer().getUniqueId());
-        }
     }
 }
