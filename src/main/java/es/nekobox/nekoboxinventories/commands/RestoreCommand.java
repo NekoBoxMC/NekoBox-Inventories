@@ -20,7 +20,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RestoreCommand implements CommandExecutor, Listener {
@@ -175,7 +178,7 @@ public class RestoreCommand implements CommandExecutor, Listener {
 
             Player player = (Player) event.getWhoClicked();
             ItemMeta meta = clickedItem.getItemMeta();
-            if (meta == null || meta.getDisplayName() == null) return;
+            if (meta == null || !meta.hasDisplayName()) return;
 
             String itemName = meta.getDisplayName();
             if (itemName.equals(NEXT_PAGE_NAME) || itemName.equals(PREVIOUS_PAGE_NAME)) {
@@ -183,11 +186,13 @@ public class RestoreCommand implements CommandExecutor, Listener {
                 int currentPage = Integer.parseInt(title.replaceAll("[^0-9]", ""));
                 List<String> deathRecords = playerDeathRecordsMap.get(player.getUniqueId());
 
-                System.out.println(deathRecords);
+                if (deathRecords == null) {
+                    return;
+                }
 
-                if (NEXT_PAGE_NAME.equals(itemName) && currentPage < getTotalPages(deathRecords)) {
+                if (itemName.equals(NEXT_PAGE_NAME) && currentPage < getTotalPages(deathRecords)) {
                     openInventory(player, currentPage + 1);
-                } else if (PREVIOUS_PAGE_NAME.equals(itemName) && currentPage > 1) {
+                } else if (itemName.equals(PREVIOUS_PAGE_NAME) && currentPage > 1) {
                     openInventory(player, currentPage - 1);
                 }
             }
@@ -201,10 +206,10 @@ public class RestoreCommand implements CommandExecutor, Listener {
         return (int) Math.ceil((double) deathRecords.size() / ITEMS_PER_PAGE);
     }
 
-//    @EventHandler
-//    public void onInventoryClose(InventoryCloseEvent event) {
-//        if (event.getView().getTitle().startsWith("Death Records - Page")) {
-//            playerDeathRecordsMap.remove(event.getPlayer().getUniqueId());
-//        }
-//    }
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getView().getTitle().startsWith("Death Records - Page")) {
+            playerDeathRecordsMap.remove(event.getPlayer().getUniqueId());
+        }
+    }
 }
