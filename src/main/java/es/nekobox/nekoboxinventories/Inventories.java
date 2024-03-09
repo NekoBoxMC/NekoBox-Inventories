@@ -40,7 +40,7 @@ public final class Inventories extends JavaPlugin {
         // Events
         getServer().getPluginManager().registerEvents(new DeathEvents(saveInventory), this);
         getServer().getPluginManager().registerEvents(new RestoreInventoryEvents(db), this);
-
+        getServer().getPluginManager().registerEvents(new RestoreCommand(this, db), this);
     }
 
     @Override

@@ -8,49 +8,58 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class RestoreCommand implements CommandExecutor {
+public class RestoreCommand implements CommandExecutor, Listener {
 
     private final JavaPlugin plugin;
     private final Database db;
+    private final Map<UUID, List<String>> playerDeathRecordsMap = new ConcurrentHashMap<>();
+    private static final String NEXT_PAGE_NAME = ChatColor.AQUA + "Next Page";
+    private static final String PREVIOUS_PAGE_NAME = ChatColor.AQUA + "Previous Page";
+    private static final int ITEMS_PER_PAGE = 45;
 
     public RestoreCommand(JavaPlugin plugin, Database db) {
         this.plugin = plugin;
         this.db = db;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("nekobox.inventories.load")) {
-            sender.sendMessage("You do not have permission to use this command.");
+        if (!sender.hasPermission("nekobox.inventories.restore")) {
+            sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            return true;
         }
 
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Only players can use this command.");
+            sender.sendMessage(ChatColor.RED + "Only players can use this command.");
             return true;
         }
 
         if (args.length != 1) {
-            sender.sendMessage("Usage: /restore <name>");
+            sender.sendMessage(ChatColor.YELLOW + "Usage: /restore <name>");
             return true;
         }
 
         Player player = (Player) sender;
-
         Player restoredPlayer = Bukkit.getPlayer(args[0]);
 
         if (restoredPlayer == null) {
-            sender.sendMessage("The player is not online.");
+            sender.sendMessage(ChatColor.RED + "The player is not online.");
             return true;
         }
 
@@ -68,8 +77,16 @@ public class RestoreCommand implements CommandExecutor {
                     deathRecords.add("ID: " + id + " - Killed By: " + (killerName == null ? "N/A" : killerName) + " - Date: " + (date == null ? "N/A": date));
                 }
 
-                Bukkit.getScheduler().runTask(plugin, () -> openInventory(player, deathRecords));
+                if (deathRecords.isEmpty()) {
+                    Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage(ChatColor.RED + "No death records found for " + restoredPlayer.getName()));
+                    return;
+                }
+
+                playerDeathRecordsMap.put(player.getUniqueId(), deathRecords);
+
+                Bukkit.getScheduler().runTask(plugin, () -> openInventory(player, 1));
             } catch (Exception e) {
+                Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage(ChatColor.RED + "An error occurred while retrieving death records."));
                 e.printStackTrace();
             }
         });
@@ -77,28 +94,116 @@ public class RestoreCommand implements CommandExecutor {
         return true;
     }
 
-    private void openInventory(Player player, List<String> deathRecords) {
-        Inventory inventory = Bukkit.createInventory(null, 54, "Death Records");
-
-        for (String record : deathRecords) {
-            ItemStack item = new ItemStack(Material.PAPER);
-            ItemMeta meta = item.getItemMeta();
-
-            String[] recordParts = record.split(" - ");
-            String idPart = recordParts[0];
-
-            String killerPart = recordParts.length > 1 ? recordParts[1] : "Killer: Unknown";
-            String datePart = recordParts.length > 2 ? recordParts[2] : "Date: Unknown";
-
-            meta.setDisplayName(ChatColor.GREEN + idPart);
-            List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + killerPart);
-            lore.add(ChatColor.GRAY + datePart);
-            meta.setLore(lore);
-            item.setItemMeta(meta);
-
-            inventory.addItem(item);
+    private void openInventory(Player player, int page) {
+        List<String> deathRecords = playerDeathRecordsMap.get(player.getUniqueId());
+        if (deathRecords == null) {
+            player.sendMessage(ChatColor.RED + "Error: Death records not found.");
+            return;
         }
+
+        int totalItems = deathRecords.size();
+        int totalPages = (int) Math.ceil((double) totalItems / ITEMS_PER_PAGE);
+        page = Math.max(1, Math.min(page, totalPages));
+
+        Inventory inventory = Bukkit.createInventory(null, 54, "Death Records - Page " + page);
+
+        int startIndex = (page - 1) * ITEMS_PER_PAGE;
+        int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+
+        for (int i = startIndex; i < endIndex; i++) {
+            ItemStack item = createRecordItem(deathRecords.get(i));
+            inventory.setItem(i - startIndex, item);
+        }
+
+        for (int i = endIndex - startIndex; i < ITEMS_PER_PAGE; i++) {
+            inventory.setItem(i, createPlaceholderItem());
+        }
+
+        if (page > 1) {
+            inventory.setItem(45, createControlItem(PREVIOUS_PAGE_NAME));
+        }
+        if (page < totalPages) {
+            inventory.setItem(53, createControlItem(NEXT_PAGE_NAME));
+        }
+
         player.openInventory(inventory);
     }
+
+    private ItemStack createRecordItem(String record) {
+        ItemStack item = new ItemStack(Material.PAPER);
+        ItemMeta meta = item.getItemMeta();
+
+        String[] parts = record.split(" - ");
+        String idPart = parts[0];
+        String killerPart = parts.length > 1 ? parts[1] : "Killer: Unknown";
+        String datePart = parts.length > 2 ? parts[2] : "Date: Unknown";
+
+        meta.setDisplayName(ChatColor.WHITE + idPart);
+
+        List<String> lore = new ArrayList<>();
+        lore.add(ChatColor.GRAY + killerPart);
+        lore.add(ChatColor.GRAY + datePart);
+        meta.setLore(lore);
+
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createPlaceholderItem() {
+        ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(" ");
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createControlItem(String name) {
+        ItemStack item = new ItemStack(Material.ARROW);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name);
+        item.setItemMeta(meta);
+        return item;
+    }
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getView().getTitle().startsWith("Death Records - Page")) {
+            event.setCancelled(true);
+
+            ItemStack clickedItem = event.getCurrentItem();
+            if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
+
+            Player player = (Player) event.getWhoClicked();
+            ItemMeta meta = clickedItem.getItemMeta();
+            if (meta == null || meta.getDisplayName() == null) return;
+
+            String itemName = meta.getDisplayName();
+            if (itemName.equals(NEXT_PAGE_NAME) || itemName.equals(PREVIOUS_PAGE_NAME)) {
+                String title = event.getView().getTitle();
+                int currentPage = Integer.parseInt(title.replaceAll("[^0-9]", ""));
+                List<String> deathRecords = playerDeathRecordsMap.get(player.getUniqueId());
+
+                System.out.println(deathRecords);
+
+                if (NEXT_PAGE_NAME.equals(itemName) && currentPage < getTotalPages(deathRecords)) {
+                    openInventory(player, currentPage + 1);
+                } else if (PREVIOUS_PAGE_NAME.equals(itemName) && currentPage > 1) {
+                    openInventory(player, currentPage - 1);
+                }
+            }
+        }
+    }
+
+    private int getTotalPages(List<String> deathRecords) {
+        if (deathRecords == null) {
+            return 0;
+        }
+        return (int) Math.ceil((double) deathRecords.size() / ITEMS_PER_PAGE);
+    }
+
+//    @EventHandler
+//    public void onInventoryClose(InventoryCloseEvent event) {
+//        if (event.getView().getTitle().startsWith("Death Records - Page")) {
+//            playerDeathRecordsMap.remove(event.getPlayer().getUniqueId());
+//        }
+//    }
 }
