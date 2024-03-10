@@ -35,10 +35,11 @@ public class Gui implements InventoryHolder {
 
     public void addButton(@NotNull GuiButton button, int slot) {
         this.buttons.put(slot, button);
+        this.inventory.setItem(slot, button.icon());
     }
 
     public void addButton(@NotNull GuiButton button, int x, int y) {
-        this.buttons.put(x + y * 9, button);
+        addButton(button, x + y * 9);
     }
 
     public void refresh() {

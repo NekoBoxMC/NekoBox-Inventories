@@ -135,6 +135,7 @@ public class RestoreCommand implements CommandExecutor {
             GuiButton button = new GuiButton(item, (g1, p1, clickType) -> {
                 openInventory(player, finalPage + 1);
             });
+            gui.addButton(button, 53);
         }
         gui.open(player);
     }
