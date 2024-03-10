@@ -24,7 +24,7 @@ public class LoadInventory {
 
     public void loadInventory(CommandSender sender, int id) {
         Connection conn = db.getConnection();
-        try(PreparedStatement ps = conn.prepareStatement("SELECT player_uuid, inventory_contents FROM inventories WHERE id = ?")) {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT player_uuid, inventory_contents, claimed FROM inventories WHERE id = ?")) {
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -39,6 +39,15 @@ public class LoadInventory {
                 byte[] bytes = rs.getBytes("inventory_contents");
                 ItemStack[] items = deserialize(bytes);
                 if (items != null) {
+                    Integer claimed = rs.getInt("claimed");
+                    if (claimed == 0) {
+                        try (PreparedStatement updatePs = conn.prepareStatement("UPDATE inventories SET claimed = 1 WHERE id = ?")) {
+                            updatePs.setInt(1, id);
+                            updatePs.executeUpdate();
+                        } catch (SQLException e) {
+                            throw new RuntimeException("Failed to update the claimed status in the database.", e);
+                        }
+                    }
                     player.getInventory().setContents(items);
                     sender.sendMessage("Inventory loaded successfully to " + player.getName() + ".");
                 } else {
@@ -49,6 +58,22 @@ public class LoadInventory {
             }
         }
         catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public ItemStack[] getInventoryContents(int id) {
+        Connection conn = db.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement("SELECT inventory_contents FROM inventories WHERE id = ?")) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                byte[] bytes = rs.getBytes("inventory_contents");
+                return deserialize(bytes);
+            } else {
+                return new ItemStack[0];
+            }
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }

@@ -1,9 +1,13 @@
 es/nekobox/nekoboxinventories/utils/LoadInventory.class
 es/nekobox/nekoboxinventories/utils/Database.class
-es/nekobox/nekoboxinventories/events/RestoreInventoryEvents.class
+es/nekobox/nekoboxinventories/gui/GuiButton$GuiClickCallback.class
 es/nekobox/nekoboxinventories/commands/LoadInventoryCommand.class
-es/nekobox/nekoboxinventories/events/DeathEvents.class
 es/nekobox/nekoboxinventories/Inventories.class
-es/nekobox/nekoboxinventories/utils/DataManager.class
 es/nekobox/nekoboxinventories/utils/SaveInventory.class
+es/nekobox/nekoboxinventories/gui/GuiButton.class
+es/nekobox/nekoboxinventories/gui/GuiCloseCallback.class
+es/nekobox/nekoboxinventories/gui/Gui.class
+es/nekobox/nekoboxinventories/events/GuiListener.class
+es/nekobox/nekoboxinventories/events/DeathEvents.class
+es/nekobox/nekoboxinventories/utils/DataManager.class
 es/nekobox/nekoboxinventories/commands/RestoreCommand.class

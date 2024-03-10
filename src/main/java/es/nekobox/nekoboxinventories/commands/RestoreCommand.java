@@ -11,8 +11,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -68,7 +66,7 @@ public class RestoreCommand implements CommandExecutor {
 
     private void syncFetch(Player restoredPlayer, Player player) {
         Connection conn = db.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement("SELECT id, date, killer_name FROM inventories WHERE player_name = ? ORDER BY unix_timestamp DESC")) {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT id, date, killer_name, claimed FROM inventories WHERE player_name = ? ORDER BY unix_timestamp DESC")) {
             ps.setString(1, restoredPlayer.getName());
             ResultSet rs = ps.executeQuery();
 
@@ -77,7 +75,14 @@ public class RestoreCommand implements CommandExecutor {
                 int id = rs.getInt("id");
                 String date = rs.getString("date");
                 String killerName = rs.getString("killer_name");
-                deathRecords.add("ID: " + id + " - Killed By: " + (killerName == null ? "N/A" : killerName) + " - Date: " + (date == null ? "N/A": date));
+                Integer claimed = rs.getInt("claimed");
+                String claimedString = "";
+                if (claimed == 0) {
+                    claimedString = "False";
+                } else {
+                    claimedString = "True";
+                }
+                deathRecords.add("ID: " + id + " - Killed By: " + (killerName == null ? "N/A" : killerName) + " - Date: " + (date == null ? "N/A": date) + " - Claimed: " + claimedString);
             }
 
             if (deathRecords.isEmpty()) {
@@ -113,10 +118,13 @@ public class RestoreCommand implements CommandExecutor {
         for (int i = startIndex; i < endIndex; i++) {
             ItemStack item = createRecordItem(deathRecords.get(i));
             GuiButton button = new GuiButton(item, (g1, p1, clickType) -> {
-                LoadInventory loader = new LoadInventory(db);
-                String idString = ChatColor.stripColor(item.getItemMeta().getDisplayName()).replace("ID: ", "");
-                loader.loadInventory(player, Integer.parseInt(idString));
-                player.closeInventory();
+                int id = Integer.parseInt(ChatColor.stripColor(item.getItemMeta().getDisplayName()).replace("ID: ", ""));
+                ItemStack[] items = new LoadInventory(db).getInventoryContents(id);
+                if (items != null) {
+                    openItemsInventory(player, items, id);
+                } else {
+                    player.sendMessage(ChatColor.RED + "Error retrieving inventory contents.");
+                }
             });
             gui.addButton(button, i - startIndex);
         }
@@ -152,12 +160,14 @@ public class RestoreCommand implements CommandExecutor {
         String idPart = parts[0];
         String killerPart = parts.length > 1 ? parts[1] : "Killer: Unknown";
         String datePart = parts.length > 2 ? parts[2] : "Date: Unknown";
+        String claimedPart = parts.length > 3 ? parts[3] : "Date: Unknown";
 
         meta.setDisplayName(ChatColor.WHITE + idPart);
 
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY + killerPart);
         lore.add(ChatColor.GRAY + datePart);
+        lore.add(ChatColor.GRAY + claimedPart);
         meta.setLore(lore);
 
         item.setItemMeta(meta);
@@ -180,75 +190,30 @@ public class RestoreCommand implements CommandExecutor {
         return item;
     }
 
-//    @EventHandler
-//    public void onInventoryClick(InventoryClickEvent event) {
-//        if (event.getView().getTitle().startsWith("Death Records - Page")) {
-//            event.setCancelled(true);
-//
-//            ItemStack clickedItem = event.getCurrentItem();
-//            if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
-//
-//            Player player = (Player) event.getWhoClicked();
-//            ItemMeta meta = clickedItem.getItemMeta();
-//            if (meta == null || !meta.hasDisplayName()) return;
-//
-//            String itemName = meta.getDisplayName();
-//            if (itemName.equals(NEXT_PAGE_NAME) || itemName.equals(PREVIOUS_PAGE_NAME)) {
-//                String title = event.getView().getTitle();
-//                int currentPage = Integer.parseInt(title.replaceAll("[^0-9]", ""));
-//                List<String> deathRecords = playerDeathRecordsMap.get(player.getUniqueId());
-//
-//                if (itemName.equals(NEXT_PAGE_NAME) && currentPage < getTotalPages(deathRecords)) {
-//                    openInventory(player, currentPage + 1);
-//                } else if (itemName.equals(PREVIOUS_PAGE_NAME) && currentPage > 1) {
-//                    openInventory(player, currentPage - 1);
-//                }
-//            }
-//        }
-//    }
-
-    private int getTotalPages(List<String> deathRecords) {
-        if (deathRecords == null) {
-            return 0;
+    private void openItemsInventory(Player player, ItemStack[] items, int inventoryId) {
+        Gui gui = new Gui("<gold>Inventory Contents", 6);
+        for (int i = 0; i < items.length; i++) {
+            if (i >= 45) break;
+            ItemStack item = items[i];
+            if (item != null) {
+                GuiButton button = new GuiButton(item);
+                gui.addButton(button, i);
+            }
         }
-        return (int) Math.ceil((double) deathRecords.size() / ITEMS_PER_PAGE);
+
+        ItemStack restoreButtonItem = new ItemStack(Material.EMERALD_BLOCK);
+        ItemMeta restoreButtonMeta = restoreButtonItem.getItemMeta();
+        restoreButtonMeta.setDisplayName(ChatColor.GREEN + "Restore Inventory");
+        restoreButtonItem.setItemMeta(restoreButtonMeta);
+
+        GuiButton restoreButton = new GuiButton(restoreButtonItem, (g, p, clickType) -> {
+            new LoadInventory(db).loadInventory(player, inventoryId);
+            player.sendMessage(ChatColor.GREEN + "Inventory restored successfully!");
+            player.closeInventory();
+        });
+
+        gui.addButton(restoreButton, 49);
+
+        gui.open(player);
     }
-
-//    @EventHandler
-//    public void onInventoryClick(InventoryClickEvent event) {
-//        if (event.getView().getTitle().startsWith("Death Records - Page")) {
-//            event.setCancelled(true);
-//
-//            ItemStack clickedItem = event.getCurrentItem();
-//            if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
-//
-//            Player player = (Player) event.getWhoClicked();
-//            ItemMeta meta = clickedItem.getItemMeta();
-//            if (meta == null || !meta.hasDisplayName()) return;
-//
-//            String itemName = meta.getDisplayName();
-//            if (itemName.equals(NEXT_PAGE_NAME) || itemName.equals(PREVIOUS_PAGE_NAME)) {
-//                String title = event.getView().getTitle();
-//                int currentPage = Integer.parseInt(title.replaceAll("[^0-9]", ""));
-//                List<String> deathRecords = playerDeathRecordsMap.get(player.getUniqueId());
-//
-//                if (deathRecords == null) {
-//                    return;
-//                }
-//
-//                if (itemName.equals(NEXT_PAGE_NAME) && currentPage < getTotalPages(deathRecords)) {
-//                    openInventory(player, currentPage + 1);
-//                } else if (itemName.equals(PREVIOUS_PAGE_NAME) && currentPage > 1) {
-//                    openInventory(player, currentPage - 1);
-//                }
-//            }
-//        }
-//    }
-
-//    @EventHandler
-//    public void onInventoryClose(InventoryCloseEvent event) {
-//        if (event.getView().getTitle().startsWith("Death Records - Page")) {
-//            playerDeathRecordsMap.remove(event.getPlayer().getUniqueId());
-//        }
-//    }
 }

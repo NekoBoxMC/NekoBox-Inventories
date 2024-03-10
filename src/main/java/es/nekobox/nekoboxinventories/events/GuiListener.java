@@ -26,7 +26,4 @@ public class GuiListener implements Listener {
             button.clickCallback().onClick(gui,(Player) event.getWhoClicked(), event.getClick());
         }
     }
-
 }
-
-

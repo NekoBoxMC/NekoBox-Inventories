@@ -4,7 +4,6 @@ import es.nekobox.nekoboxinventories.commands.LoadInventoryCommand;
 import es.nekobox.nekoboxinventories.commands.RestoreCommand;
 import es.nekobox.nekoboxinventories.events.DeathEvents;
 import es.nekobox.nekoboxinventories.events.GuiListener;
-import es.nekobox.nekoboxinventories.events.RestoreInventoryEvents;
 import es.nekobox.nekoboxinventories.utils.DataManager;
 import es.nekobox.nekoboxinventories.utils.Database;
 import es.nekobox.nekoboxinventories.utils.SaveInventory;
@@ -41,7 +40,6 @@ public final class Inventories extends JavaPlugin {
 
         // Events
         getServer().getPluginManager().registerEvents(new DeathEvents(saveInventory), this);
-        getServer().getPluginManager().registerEvents(new RestoreInventoryEvents(db), this);
         getServer().getPluginManager().registerEvents(new GuiListener(), this);
     }
 
