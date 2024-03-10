@@ -35,7 +35,7 @@ public final class Inventories extends JavaPlugin {
         SaveInventory saveInventory = new SaveInventory(db);
 
         // Commands
-        this.getCommand("loadinventory").setExecutor(new LoadInventoryCommand(this, db));
+        this.getCommand("loadinventory").setExecutor(new LoadInventoryCommand(db));
         this.getCommand("revive").setExecutor(new ReviveCommand(this, db));
 
         // Events

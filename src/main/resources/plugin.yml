@@ -8,4 +8,4 @@ commands:
         usage: /loadinventory <id>
     revive:
         description: Revive a player's inventory from their death records.
-        usage: /revive <player>
+        usage: /revive <name>

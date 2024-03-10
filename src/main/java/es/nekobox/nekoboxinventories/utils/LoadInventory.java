@@ -1,6 +1,7 @@
 package es.nekobox.nekoboxinventories.utils;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -32,7 +33,7 @@ public class LoadInventory {
                 UUID playerUuid = UUID.fromString(playerUuidStr);
                 Player player = Bukkit.getPlayer(playerUuid);
                 if (player == null) {
-                    sender.sendMessage("The player is not online.");
+                    sender.sendMessage(ChatColor.RED + "The player is not online.");
                     return;
                 }
 
@@ -49,12 +50,12 @@ public class LoadInventory {
                         }
                     }
                     player.getInventory().setContents(items);
-                    sender.sendMessage("Inventory loaded successfully to " + player.getName() + ".");
+                    sender.sendMessage(ChatColor.GREEN + "Inventory loaded successfully to " + player.getName() + ".");
                 } else {
-                    sender.sendMessage("Error loading inventory.");
+                    sender.sendMessage(ChatColor.RED + "Error loading inventory.");
                 }
             } else {
-                sender.sendMessage("Inventory with the specified ID not found.");
+                sender.sendMessage(ChatColor.RED + "Inventory with the specified ID not found.");
             }
         }
         catch (SQLException e) {
