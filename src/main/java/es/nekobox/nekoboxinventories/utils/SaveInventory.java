@@ -38,7 +38,6 @@ public class SaveInventory {
         }
     }
 
-
     private byte[] serialize(ItemStack[] items) {
         YamlConfiguration yaml = new YamlConfiguration();
         yaml.set("items", items);
