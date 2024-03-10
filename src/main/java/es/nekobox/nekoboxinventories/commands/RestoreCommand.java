@@ -3,6 +3,7 @@ package es.nekobox.nekoboxinventories.commands;
 import es.nekobox.nekoboxinventories.gui.Gui;
 import es.nekobox.nekoboxinventories.gui.GuiButton;
 import es.nekobox.nekoboxinventories.utils.Database;
+import es.nekobox.nekoboxinventories.utils.LoadInventory;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -112,7 +113,10 @@ public class RestoreCommand implements CommandExecutor {
         for (int i = startIndex; i < endIndex; i++) {
             ItemStack item = createRecordItem(deathRecords.get(i));
             GuiButton button = new GuiButton(item, (g1, p1, clickType) -> {
-                // DO NOTHING.
+                LoadInventory loader = new LoadInventory(db);
+                String idString = ChatColor.stripColor(item.getItemMeta().getDisplayName()).replace("ID: ", "");
+                loader.loadInventory(player, Integer.parseInt(idString));
+                player.closeInventory();
             });
             gui.addButton(button, i - startIndex);
         }
