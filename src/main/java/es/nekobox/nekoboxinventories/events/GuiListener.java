@@ -13,7 +13,7 @@ public class GuiListener implements Listener {
     @EventHandler
     public void onInvClose(InventoryCloseEvent event) {
         if (event.getInventory().getHolder() instanceof Gui gui) {
-            gui.close((Player) event.getPlayer());
+            gui.close((Player) event.getPlayer(), true);
         }
     }
 

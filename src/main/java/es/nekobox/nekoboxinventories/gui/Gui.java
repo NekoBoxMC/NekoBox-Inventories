@@ -60,13 +60,17 @@ public class Gui implements InventoryHolder {
         player.openInventory(this.inventory);
     }
 
-    public void close(@NotNull Player player) {
-        player.closeInventory();
+    public void close(@NotNull Player player, boolean fromEvent) {
+        if (!fromEvent) player.closeInventory();
         if (this.closeCallbacks != null) {
             for (GuiCloseCallback callback : this.closeCallbacks) {
-                callback.onClose(this, player);
+                if (callback != null) callback.onClose(this, player);
             }
         }
+    }
+
+    public void close(@NotNull Player player) {
+        close(player, false);
     }
 
     public void addCloseCallback(@NotNull GuiCloseCallback callback) {
