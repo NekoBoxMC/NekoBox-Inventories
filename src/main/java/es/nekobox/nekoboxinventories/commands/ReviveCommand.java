@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class RestoreCommand implements CommandExecutor {
+public class ReviveCommand implements CommandExecutor {
 
     private final JavaPlugin plugin;
     private final Database db;
@@ -33,7 +33,7 @@ public class RestoreCommand implements CommandExecutor {
     private static final String PREVIOUS_PAGE_NAME = ChatColor.AQUA + "Previous Page";
     private static final int ITEMS_PER_PAGE = 45;
 
-    public RestoreCommand(JavaPlugin plugin, Database db) {
+    public ReviveCommand(JavaPlugin plugin, Database db) {
         this.plugin = plugin;
         this.db = db;
     }

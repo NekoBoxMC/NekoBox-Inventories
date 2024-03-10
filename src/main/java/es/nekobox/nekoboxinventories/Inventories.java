@@ -1,7 +1,7 @@
 package es.nekobox.nekoboxinventories;
 
 import es.nekobox.nekoboxinventories.commands.LoadInventoryCommand;
-import es.nekobox.nekoboxinventories.commands.RestoreCommand;
+import es.nekobox.nekoboxinventories.commands.ReviveCommand;
 import es.nekobox.nekoboxinventories.events.DeathEvents;
 import es.nekobox.nekoboxinventories.events.GuiListener;
 import es.nekobox.nekoboxinventories.utils.DataManager;
@@ -36,7 +36,7 @@ public final class Inventories extends JavaPlugin {
 
         // Commands
         this.getCommand("loadinventory").setExecutor(new LoadInventoryCommand(this, db));
-        this.getCommand("restore").setExecutor(new RestoreCommand(this, db));
+        this.getCommand("revive").setExecutor(new ReviveCommand(this, db));
 
         // Events
         getServer().getPluginManager().registerEvents(new DeathEvents(saveInventory), this);
@@ -52,14 +52,15 @@ public final class Inventories extends JavaPlugin {
         db.connect();
         Connection conn = db.getConnection();
         String sql = "CREATE TABLE IF NOT EXISTS inventories (" +
-                "id INT PRIMARY KEY AUTO_INCREMENT, " +
-                "player_name VARCHAR(255)," +
+                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                "player_name VARCHAR(255), " +
                 "player_uuid VARCHAR(36), " +
                 "inventory_contents TEXT, " +
-                "unix_timestamp INT," +
+                "unix_timestamp INT, " +
                 "date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
                 "killer_name VARCHAR(255), " +
-                "killer_uuid VARCHAR(36))";
+                "killer_uuid VARCHAR(36), " +
+                "claimed INT DEFAULT 0)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.execute();
         } catch (SQLException e) {

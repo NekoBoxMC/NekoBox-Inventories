@@ -8,6 +8,6 @@ es/nekobox/nekoboxinventories/gui/GuiButton.class
 es/nekobox/nekoboxinventories/gui/GuiCloseCallback.class
 es/nekobox/nekoboxinventories/gui/Gui.class
 es/nekobox/nekoboxinventories/events/GuiListener.class
+es/nekobox/nekoboxinventories/commands/ReviveCommand.class
 es/nekobox/nekoboxinventories/events/DeathEvents.class
 es/nekobox/nekoboxinventories/utils/DataManager.class
-es/nekobox/nekoboxinventories/commands/RestoreCommand.class

@@ -6,5 +6,6 @@ commands:
     loadinventory:
         description: Loads a player's inventory from the database.
         usage: /loadinventory <id>
-    restore:
-        description: Restore a player's inventory from their death records.
+    revive:
+        description: Revive a player's inventory from their death records.
+        usage: /revive <player>
