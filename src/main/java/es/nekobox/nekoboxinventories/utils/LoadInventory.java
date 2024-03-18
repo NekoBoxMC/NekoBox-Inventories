@@ -50,6 +50,7 @@ public class LoadInventory {
                     }
                     player.getInventory().setContents(items);
                     sender.sendMessage(ChatColor.GREEN + "Inventory loaded successfully to " + player.getName() + ".");
+                    player.sendMessage(ChatColor.GREEN + "Your inventory has been restored with the ID of: " + ChatColor.YELLOW + id);
                 } else {
                     sender.sendMessage(ChatColor.RED + "Error loading inventory.");
                 }

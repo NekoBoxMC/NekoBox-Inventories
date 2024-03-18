@@ -51,7 +51,7 @@ public class ReviveCommand implements CommandExecutor {
         }
 
         if (args.length != 1) {
-            sender.sendMessage(ChatColor.YELLOW + "Usage: /restore <name>");
+            sender.sendMessage(ChatColor.YELLOW + "Usage: /revive <name>");
             return true;
         }
         Player restoredPlayer = Bukkit.getPlayer(args[0]);
@@ -160,9 +160,9 @@ public class ReviveCommand implements CommandExecutor {
         String idPart = parts[0];
         String killerPart = parts.length > 1 ? parts[1] : "Killer: Unknown";
         String datePart = parts.length > 2 ? parts[2] : "Date: Unknown";
-        String claimedPart = parts.length > 3 ? parts[3] : "Date: Unknown";
+        String claimedPart = parts.length > 3 ? parts[3] : "Claimed: Unknown";
 
-        meta.setDisplayName(ChatColor.WHITE + idPart);
+        meta.setDisplayName(ChatColor.AQUA + idPart);
 
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY + killerPart);

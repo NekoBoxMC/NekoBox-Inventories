@@ -66,5 +66,15 @@ public final class Inventories extends JavaPlugin {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+
+        String sql2 = "CREATE TABLE IF NOT EXISTS player_linking (" +
+                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                "discord_id VARCHAR(255), " +
+                "player_name VARCHAR(36))";
+        try (PreparedStatement ps = conn.prepareStatement(sql2)) {
+            ps.execute();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
