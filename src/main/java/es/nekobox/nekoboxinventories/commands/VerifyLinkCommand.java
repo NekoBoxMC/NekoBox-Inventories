@@ -12,9 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.function.Supplier;
 
 public class VerifyLinkCommand implements CommandExecutor {
     private final JavaPlugin plugin;
@@ -37,7 +35,6 @@ public class VerifyLinkCommand implements CommandExecutor {
         if (args.length == 3) {
 
             Player player = Bukkit.getPlayer(args[0]);
-
             if (player == null) {
                 sender.sendMessage("Not Online");
                 return true;
@@ -45,16 +42,42 @@ public class VerifyLinkCommand implements CommandExecutor {
 
             String discordId = args[1];
             String code = args[2];
-            String playerName = player.getName();
 
-            plugin.getLogger().info(discordId);
-            plugin.getLogger().info(code);
-            plugin.getLogger().info(playerName);
-            System.out.println(playerCodes);
+            if (playerCodes.containsKey(player.getName()) && playerCodes.get(player.getName()).equals(code)) {
+                Connection conn = db.getConnection();
+                try {
+                    PreparedStatement ps = conn.prepareStatement("SELECT id, discord_id, player_name FROM player_linking WHERE player_name = ?");
+                    ps.setString(1, player.getName());
+                    ResultSet rs = ps.executeQuery();
 
-            if (playerCodes.containsKey(playerName) && playerCodes.get(playerName).equals(code)) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> syncLink(sender, player, discordId));
-                playerCodes.remove(playerName);
+                    String message;
+                    if (!rs.next()) {
+                        PreparedStatement ps2 = conn.prepareStatement("SELECT id, discord_id, player_name FROM player_linking WHERE discord_id = ?");
+                        ps2.setString(1, discordId);
+                        ResultSet rs2 = ps2.executeQuery();
+
+                        if (!rs2.next()) {
+                            String query = "INSERT INTO player_linking (discord_id, player_name) VALUES (?, ?)";
+                            PreparedStatement ps3 = conn.prepareStatement(query);
+                            ps3.setString(1, discordId);
+                            ps3.setString(2, player.getName());
+                            ps3.executeUpdate();
+                            message = "True";
+                            playerCodes.remove(player.getName());
+                        } else {
+                            message = "Discord Already Linked";
+                        }
+                    } else {
+                        message = "Minecraft Already Linked";
+                    }
+
+                    String finalMessage = message;
+                    sender.sendMessage(finalMessage);
+
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    sender.sendMessage("Error");
+                }
             } else {
                 sender.sendMessage("False");
             }
@@ -63,42 +86,5 @@ public class VerifyLinkCommand implements CommandExecutor {
             sender.sendMessage("Usage: /verifylink <name> <discord_id> <code>");
         }
         return true;
-    }
-
-    private void syncLink(CommandSender sender, Player player, String discordId) {
-        Connection conn = db.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement("SELECT id, discord_id, player_name FROM player_linking WHERE player_name = ?")) {
-            ps.setString(1, player.getName());
-            ResultSet rs = ps.executeQuery();
-
-            if (!rs.next()) {
-                try (PreparedStatement ps2 = conn.prepareStatement("SELECT id, discord_id, player_name FROM player_linking WHERE discord_id = ?")) {
-                    ps2.setString(1, discordId);
-                    ResultSet rs2 = ps2.executeQuery();
-
-                    if (!rs2.next()) {
-                        String query = "INSERT INTO player_linking (discord_id, player_name) VALUES (?, ?)";
-                        try (PreparedStatement ps3 = conn.prepareStatement(query)) {
-                            ps3.setString(1, discordId);
-                            ps3.setString(2, player.getName());
-                            ps3.executeUpdate();
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                        Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage("True"));
-                    } else {
-                        Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage("Discord Already Linked"));
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-
-            } else {
-                Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage("Minecraft Already Linked"));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 }
