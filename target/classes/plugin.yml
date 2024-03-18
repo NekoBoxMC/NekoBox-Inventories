@@ -3,9 +3,15 @@ version: '1.0'
 main: es.nekobox.nekoboxinventories.Inventories
 api-version: '1.20'
 commands:
+    generatecode:
+        description: Generates a linking code for the player.
+        usage: /generatecode <name> <discord_name> <discord_id>
     loadinventory:
         description: Loads a player's inventory from the database.
         usage: /loadinventory <id>
     revive:
         description: Revive a player's inventory from their death records.
         usage: /revive <name>
+    verifylink:
+        description: Verifies a linking code for the player.
+        usage: /verifylink <name> <discord_id> <code>

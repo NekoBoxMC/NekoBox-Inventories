@@ -1,7 +1,9 @@
 package es.nekobox.nekoboxinventories;
 
+import es.nekobox.nekoboxinventories.commands.GenerateCodeCommand;
 import es.nekobox.nekoboxinventories.commands.LoadInventoryCommand;
 import es.nekobox.nekoboxinventories.commands.ReviveCommand;
+import es.nekobox.nekoboxinventories.commands.VerifyLinkCommand;
 import es.nekobox.nekoboxinventories.events.DeathEvents;
 import es.nekobox.nekoboxinventories.events.GuiListener;
 import es.nekobox.nekoboxinventories.utils.DataManager;
@@ -11,11 +13,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.HashMap;
 
 public final class Inventories extends JavaPlugin {
     private static Inventories instance;
     private Database db;
     public DataManager config;
+    private HashMap<String, String> playerCodes = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -35,8 +39,10 @@ public final class Inventories extends JavaPlugin {
         SaveInventory saveInventory = new SaveInventory(db);
 
         // Commands
+        this.getCommand("generatecode").setExecutor(new GenerateCodeCommand(this, playerCodes));
         this.getCommand("loadinventory").setExecutor(new LoadInventoryCommand(db));
         this.getCommand("revive").setExecutor(new ReviveCommand(this, db));
+        this.getCommand("verifylink").setExecutor(new VerifyLinkCommand(this, playerCodes, db));
 
         // Events
         getServer().getPluginManager().registerEvents(new DeathEvents(saveInventory), this);
