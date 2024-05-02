@@ -9,6 +9,9 @@ commands:
     loadinventory:
         description: Loads a player's inventory from the database.
         usage: /loadinventory <id>
+    spawnquestvillager:
+        description: Spawns the quest villager.
+        usage: /spawnquestvillager
     revive:
         description: Revive a player's inventory from their death records.
         usage: /revive <name>

@@ -1,11 +1,9 @@
 package es.nekobox.nekoboxinventories;
 
-import es.nekobox.nekoboxinventories.commands.GenerateCodeCommand;
-import es.nekobox.nekoboxinventories.commands.LoadInventoryCommand;
-import es.nekobox.nekoboxinventories.commands.ReviveCommand;
-import es.nekobox.nekoboxinventories.commands.VerifyLinkCommand;
+import es.nekobox.nekoboxinventories.commands.*;
 import es.nekobox.nekoboxinventories.events.DeathEvents;
 import es.nekobox.nekoboxinventories.events.GuiListener;
+import es.nekobox.nekoboxinventories.events.QuestEvents;
 import es.nekobox.nekoboxinventories.utils.DataManager;
 import es.nekobox.nekoboxinventories.utils.Database;
 import es.nekobox.nekoboxinventories.utils.SaveInventory;
@@ -41,12 +39,14 @@ public final class Inventories extends JavaPlugin {
         // Commands
         this.getCommand("generatecode").setExecutor(new GenerateCodeCommand(this, playerCodes));
         this.getCommand("loadinventory").setExecutor(new LoadInventoryCommand(db));
+        this.getCommand("spawnquestvillager").setExecutor(new QuestsCommand(this, db));
         this.getCommand("revive").setExecutor(new ReviveCommand(this, db));
         this.getCommand("verifylink").setExecutor(new VerifyLinkCommand(this, playerCodes, db));
 
         // Events
         getServer().getPluginManager().registerEvents(new DeathEvents(saveInventory), this);
         getServer().getPluginManager().registerEvents(new GuiListener(), this);
+        getServer().getPluginManager().registerEvents(new QuestEvents(db), this);
     }
 
     @Override
@@ -80,6 +80,17 @@ public final class Inventories extends JavaPlugin {
                 ps.execute();
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to create player_linking table", e);
+            }
+
+            String sqlPlayerQuests = "CREATE TABLE IF NOT EXISTS player_quests (" +
+                    "player_name VARCHAR(255), " +
+                    "player_uuid VARCHAR(36), " +
+                    "notified BOOLEAN DEFAULT false, " +
+                    "quest_id INT)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlPlayerQuests)) {
+                ps.execute();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to create player_quests table", e);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Database connection failed", e);
