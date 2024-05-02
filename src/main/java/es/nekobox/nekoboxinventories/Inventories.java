@@ -55,32 +55,34 @@ public final class Inventories extends JavaPlugin {
     }
 
     private void initDatabase() {
-        db.connect();
-        Connection conn = db.getConnection();
-        String sql = "CREATE TABLE IF NOT EXISTS inventories (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                "player_name VARCHAR(255), " +
-                "player_uuid VARCHAR(36), " +
-                "inventory_contents TEXT, " +
-                "unix_timestamp INT, " +
-                "date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
-                "killer_name VARCHAR(255), " +
-                "killer_uuid VARCHAR(36), " +
-                "claimed INT DEFAULT 0)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.execute();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        try (Connection conn = db.getConnection()) {
+            String sqlInventories = "CREATE TABLE IF NOT EXISTS inventories (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                    "player_name VARCHAR(255), " +
+                    "player_uuid VARCHAR(36), " +
+                    "inventory_contents TEXT, " +
+                    "unix_timestamp INT, " +
+                    "date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                    "killer_name VARCHAR(255), " +
+                    "killer_uuid VARCHAR(36), " +
+                    "claimed INT DEFAULT 0)";
+            try (PreparedStatement ps = conn.prepareStatement(sqlInventories)) {
+                ps.execute();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to create inventories table", e);
+            }
 
-        String sql2 = "CREATE TABLE IF NOT EXISTS player_linking (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                "discord_id VARCHAR(255), " +
-                "player_name VARCHAR(36))";
-        try (PreparedStatement ps = conn.prepareStatement(sql2)) {
-            ps.execute();
+            String sqlPlayerLinking = "CREATE TABLE IF NOT EXISTS player_linking (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                    "discord_id VARCHAR(255), " +
+                    "player_name VARCHAR(36))";
+            try (PreparedStatement ps = conn.prepareStatement(sqlPlayerLinking)) {
+                ps.execute();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to create player_linking table", e);
+            }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Database connection failed", e);
         }
     }
 }

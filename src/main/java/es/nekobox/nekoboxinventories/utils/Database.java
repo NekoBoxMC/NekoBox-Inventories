@@ -1,66 +1,45 @@
 package es.nekobox.nekoboxinventories.utils;
 
 import es.nekobox.nekoboxinventories.Inventories;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class Database {
-    private final String url;
-    private Connection connection;
+    private final HikariDataSource dataSource;
 
     public Database(Inventories inventories) {
-        this.url = inventories.config.getConfig().getString("MySQL.URL");
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(inventories.config.getConfig().getString("MySQL.URL"));
+        config.setMaximumPoolSize(10);
+        config.setMinimumIdle(5);
+        config.setConnectionTimeout(30000);
+        config.setIdleTimeout(600000);
+        config.setMaxLifetime(1800000);
+
+        this.dataSource = new HikariDataSource(config);
     }
 
-    public void connect() {
-        int maxReconnectAttempts = 3;
-        long reconnectDelay = 5000;
-
-        int attempts = 0;
-
-        while (!isConnected() && attempts < maxReconnectAttempts) {
-            try {
-                connection = DriverManager.getConnection(url);
-                if (isConnected()) {
-                    break;
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                attempts++;
-                try {
-                    Thread.sleep(reconnectDelay);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    throw new RuntimeException("Interrupted during reconnection delay", ie);
-                }
+    public void connect() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            if (connection == null) {
+                throw new RuntimeException("Failed to connect to the database.");
             }
-        }
-
-        if (attempts >= maxReconnectAttempts) {
-            throw new RuntimeException("Failed to connect to the database after " + maxReconnectAttempts + " attempts.");
         }
     }
 
     public boolean isConnected() {
-        try {
-            return connection != null && !connection.isClosed();
-        } catch (SQLException e) {
-            return false;
-        }
+        return dataSource != null && !dataSource.isClosed();
     }
 
     public void close() {
-        if (isConnected()) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
         }
     }
 
-    public Connection getConnection() {
-        return connection;
+    public Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
     }
 }

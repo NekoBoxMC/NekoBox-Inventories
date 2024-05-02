@@ -33,58 +33,64 @@ public class VerifyLinkCommand implements CommandExecutor {
         }
 
         if (args.length == 3) {
-
             Player player = Bukkit.getPlayer(args[0]);
             if (player == null) {
-                sender.sendMessage("Not Online");
+                sender.sendMessage(ChatColor.RED + "Player not online.");
                 return true;
             }
 
             String discordId = args[1];
             String code = args[2];
 
-            if (playerCodes.containsKey(player.getName()) && playerCodes.get(player.getName()).equals(code)) {
-                Connection conn = db.getConnection();
-                try {
-                    PreparedStatement ps = conn.prepareStatement("SELECT id, discord_id, player_name FROM player_linking WHERE player_name = ?");
-                    ps.setString(1, player.getName());
-                    ResultSet rs = ps.executeQuery();
-
-                    String message;
-                    if (!rs.next()) {
-                        PreparedStatement ps2 = conn.prepareStatement("SELECT id, discord_id, player_name FROM player_linking WHERE discord_id = ?");
-                        ps2.setString(1, discordId);
-                        ResultSet rs2 = ps2.executeQuery();
-
-                        if (!rs2.next()) {
-                            String query = "INSERT INTO player_linking (discord_id, player_name) VALUES (?, ?)";
-                            PreparedStatement ps3 = conn.prepareStatement(query);
-                            ps3.setString(1, discordId);
-                            ps3.setString(2, player.getName());
-                            ps3.executeUpdate();
-                            message = "True";
-                            playerCodes.remove(player.getName());
-                        } else {
-                            message = "Discord Already Linked";
-                        }
-                    } else {
-                        message = "Minecraft Already Linked";
-                    }
-
-                    String finalMessage = message;
-                    sender.sendMessage(finalMessage);
-
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    sender.sendMessage("Error");
-                }
-            } else {
-                sender.sendMessage("False");
+            if (!playerCodes.getOrDefault(player.getName(), "").equals(code)) {
+                sender.sendMessage(ChatColor.RED + "Incorrect code.");
+                return true;
             }
 
+            try (Connection conn = db.getConnection()) {
+                if (isPlayerLinked(conn, player.getName())) {
+                    sender.sendMessage(ChatColor.YELLOW + "Minecraft account already linked.");
+                } else if (isDiscordLinked(conn, discordId)) {
+                    sender.sendMessage(ChatColor.YELLOW + "Discord ID already linked.");
+                } else {
+                    linkPlayer(conn, discordId, player.getName());
+                    sender.sendMessage(ChatColor.GREEN + "Account linked successfully.");
+                    playerCodes.remove(player.getName());
+                }
+            } catch (SQLException e) {
+                sender.sendMessage(ChatColor.RED + "Error during database operation.");
+                e.printStackTrace();
+            }
         } else {
-            sender.sendMessage("Usage: /verifylink <name> <discord_id> <code>");
+            sender.sendMessage(ChatColor.RED + "Usage: /verifylink <name> <discord_id> <code>");
         }
         return true;
+    }
+
+    private boolean isPlayerLinked(Connection conn, String playerName) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT id FROM player_linking WHERE player_name = ?")) {
+            ps.setString(1, playerName);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    private boolean isDiscordLinked(Connection conn, String discordId) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT id FROM player_linking WHERE discord_id = ?")) {
+            ps.setString(1, discordId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    private void linkPlayer(Connection conn, String discordId, String playerName) throws SQLException {
+        String query = "INSERT INTO player_linking (discord_id, player_name) VALUES (?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, discordId);
+            ps.setString(2, playerName);
+            ps.executeUpdate();
+        }
     }
 }

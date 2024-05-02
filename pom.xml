@@ -68,9 +68,9 @@
           <scope>provided</scope>
       </dependency>
       <dependency>
-          <groupId>mysql</groupId>
-          <artifactId>mysql-connector-java</artifactId>
-          <version>8.0.23</version>
+          <groupId>com.zaxxer</groupId>
+          <artifactId>HikariCP</artifactId>
+          <version>5.0.1</version>
       </dependency>
   </dependencies>
 </project>

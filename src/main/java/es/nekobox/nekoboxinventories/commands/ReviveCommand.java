@@ -65,37 +65,36 @@ public class ReviveCommand implements CommandExecutor {
     }
 
     private void syncFetch(Player restoredPlayer, Player player) {
-        Connection conn = db.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement("SELECT id, date, killer_name, claimed FROM inventories WHERE player_name = ? ORDER BY unix_timestamp DESC")) {
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT id, date, killer_name, claimed FROM inventories WHERE player_name = ? ORDER BY unix_timestamp DESC")) {
             ps.setString(1, restoredPlayer.getName());
-            ResultSet rs = ps.executeQuery();
-
-            List<String> deathRecords = new ArrayList<>();
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String date = rs.getString("date");
-                String killerName = rs.getString("killer_name");
-                Integer claimed = rs.getInt("claimed");
-                String claimedString = "";
-                if (claimed == 0) {
-                    claimedString = "False";
-                } else {
-                    claimedString = "True";
+            try (ResultSet rs = ps.executeQuery()) {
+                List<String> deathRecords = new ArrayList<>();
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    String date = rs.getString("date");
+                    String killerName = rs.getString("killer_name");
+                    Integer claimed = rs.getInt("claimed");
+                    String claimedString = claimed == 0 ? "False" : "True";
+                    deathRecords.add(String.format("ID: %d - Killed By: %s - Date: %s - Claimed: %s",
+                            id,
+                            (killerName != null ? killerName : "N/A"),
+                            (date != null ? date : "N/A"),
+                            claimedString));
                 }
-                deathRecords.add("ID: " + id + " - Killed By: " + (killerName == null ? "N/A" : killerName) + " - Date: " + (date == null ? "N/A": date) + " - Claimed: " + claimedString);
+
+                if (deathRecords.isEmpty()) {
+                    Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage(ChatColor.RED + "No death records found for " + restoredPlayer.getName()));
+                    return;
+                }
+
+                playerDeathRecordsMap.put(player.getUniqueId(), deathRecords);
+
+                Bukkit.getScheduler().runTask(plugin, () -> openInventory(player, 1));
             }
-
-            if (deathRecords.isEmpty()) {
-                Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage(ChatColor.RED + "No death records found for " + restoredPlayer.getName()));
-                return;
-            }
-
-            playerDeathRecordsMap.put(player.getUniqueId(), deathRecords);
-
-            Bukkit.getScheduler().runTask(plugin, () -> openInventory(player, 1));
         } catch (SQLException e) {
             Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage(ChatColor.RED + "An error occurred while retrieving death records."));
-            throw new RuntimeException(e);
+            throw new RuntimeException("Database operation failed", e);
         }
     }
 

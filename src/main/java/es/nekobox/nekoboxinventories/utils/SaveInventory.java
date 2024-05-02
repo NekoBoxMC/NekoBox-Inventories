@@ -17,23 +17,26 @@ public class SaveInventory {
     }
 
     public void save(Player player, Player killer) {
-        Connection conn = db.getConnection();
-        String killerUuid = killer != null ? killer.getUniqueId().toString() : null;
-        String killerName = killer != null ? killer.getName() : null;
+        byte[] inventoryBytes = serialize(player.getInventory().getContents());
 
-        long unixTime = System.currentTimeMillis() / 1000L;
-
-        String query = "INSERT INTO inventories (player_name, player_uuid, inventory_contents, unix_timestamp, killer_name, killer_uuid) VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement("INSERT INTO inventories (player_name, player_uuid, inventory_contents, unix_timestamp, killer_name, killer_uuid) VALUES (?, ?, ?, ?, ?, ?)")) {
             ps.setString(1, player.getName());
             ps.setString(2, player.getUniqueId().toString());
-            byte[] inventoryBytes = serialize(player.getInventory().getContents());
             ps.setBytes(3, inventoryBytes);
-            ps.setLong(4, unixTime);
-            ps.setString(5, killerName);
-            ps.setString(6, killerUuid);
+            ps.setLong(4, System.currentTimeMillis() / 1000L);
+
+            if (killer != null) {
+                ps.setString(5, killer.getName());
+                ps.setString(6, killer.getUniqueId().toString());
+            } else {
+                ps.setNull(5, java.sql.Types.VARCHAR);
+                ps.setNull(6, java.sql.Types.VARCHAR);
+            }
+
             ps.executeUpdate();
         } catch (SQLException e) {
+            System.err.println("Failed to save player inventory data.");
             e.printStackTrace();
         }
     }

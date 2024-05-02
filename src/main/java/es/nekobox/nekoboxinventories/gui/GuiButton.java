@@ -11,13 +11,10 @@ public record GuiButton(@NotNull ItemStack icon, @NotNull GuiClickCallback click
         this(icon, (gui, player, clickType) -> {});
     }
 
-
     @FunctionalInterface
     public interface GuiClickCallback {
 
         void onClick(@NotNull Gui gui, @NotNull Player player, @NotNull ClickType clickType);
 
     }
-
-
 }

@@ -5,7 +5,5 @@ import org.jetbrains.annotations.NotNull;
 
 @FunctionalInterface
 public interface GuiCloseCallback {
-
     void onClose(@NotNull Gui gui, @NotNull Player player);
-
 }
