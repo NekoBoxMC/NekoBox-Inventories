@@ -51,4 +51,27 @@ public class Quests {
             player.sendMessage(ChatColor.RED + "An error occurred while setting up your quest profile.");
         }
     }
+
+    public void updateQuestNotify(Player player, boolean notify) {
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE player_quests SET notified = ? WHERE player_uuid = ?")) {
+            ps.setBoolean(1, notify);
+            ps.setString(2, player.getUniqueId().toString());
+
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            player.sendMessage(ChatColor.RED + "An error occurred while updating your quest profile.");
+        }
+    }
+
+    public void incrementQuestId(Player player) {
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE player_quests SET quest_id = quest_id + 1 WHERE player_uuid = ?")) {
+            ps.setString(1, player.getUniqueId().toString());
+
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            player.sendMessage(ChatColor.RED + "An error occurred while updating your quest profile.");
+        }
+    }
 }
