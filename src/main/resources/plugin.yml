@@ -3,6 +3,9 @@ version: '${project.version}'
 main: es.nekobox.nekoboxinventories.Inventories
 api-version: '1.20'
 commands:
+    findblock:
+        description: Finds and teleports you to a specific block.
+        usage: /findblock <block> <name>
     generatecode:
         description: Generates a linking code for the player.
         usage: /generatecode <name> <discord_name> <discord_id>

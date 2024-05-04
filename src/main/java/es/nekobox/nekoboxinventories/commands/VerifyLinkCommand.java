@@ -35,7 +35,7 @@ public class VerifyLinkCommand implements CommandExecutor {
         if (args.length == 3) {
             Player player = Bukkit.getPlayer(args[0]);
             if (player == null) {
-                sender.sendMessage(ChatColor.RED + "Player not online.");
+                sender.sendMessage("Not Online");
                 return true;
             }
 
@@ -43,23 +43,22 @@ public class VerifyLinkCommand implements CommandExecutor {
             String code = args[2];
 
             if (!playerCodes.getOrDefault(player.getName(), "").equals(code)) {
-                sender.sendMessage(ChatColor.RED + "Incorrect code.");
+                sender.sendMessage("Incorrect Code");
                 return true;
             }
 
             try (Connection conn = db.getConnection()) {
                 if (isPlayerLinked(conn, player.getName())) {
-                    sender.sendMessage(ChatColor.YELLOW + "Minecraft account already linked.");
+                    sender.sendMessage("Minecraft Already Linked");
                 } else if (isDiscordLinked(conn, discordId)) {
-                    sender.sendMessage(ChatColor.YELLOW + "Discord ID already linked.");
+                    sender.sendMessage("Discord Already Linked");
                 } else {
                     linkPlayer(conn, discordId, player.getName());
-                    sender.sendMessage(ChatColor.GREEN + "Account linked successfully.");
+                    sender.sendMessage("Linked Successfully");
                     playerCodes.remove(player.getName());
                 }
             } catch (SQLException e) {
-                sender.sendMessage(ChatColor.RED + "Error during database operation.");
-                e.printStackTrace();
+                sender.sendMessage("Error");
             }
         } else {
             sender.sendMessage(ChatColor.RED + "Usage: /verifylink <name> <discord_id> <code>");

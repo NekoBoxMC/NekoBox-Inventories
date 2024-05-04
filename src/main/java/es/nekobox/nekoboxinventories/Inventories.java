@@ -37,6 +37,7 @@ public final class Inventories extends JavaPlugin {
         SaveInventory saveInventory = new SaveInventory(db);
 
         // Commands
+        this.getCommand("findblock").setExecutor(new FindBlockCommand(this));
         this.getCommand("generatecode").setExecutor(new GenerateCodeCommand(this, playerCodes));
         this.getCommand("loadinventory").setExecutor(new LoadInventoryCommand(db));
         this.getCommand("spawnquestvillager").setExecutor(new QuestsCommand(this, db));
