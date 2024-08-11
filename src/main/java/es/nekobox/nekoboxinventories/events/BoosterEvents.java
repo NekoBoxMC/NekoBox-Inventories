@@ -131,6 +131,8 @@ public class BoosterEvents implements Listener {
         return switch (blockType) {
             case IRON_ORE -> Material.IRON_INGOT;
             case GOLD_ORE -> Material.GOLD_INGOT;
+            case DIAMOND_ORE -> Material.DIAMOND;
+            case EMERALD_ORE -> Material.EMERALD;
             case SAND -> Material.GLASS;
             case COBBLESTONE -> Material.STONE;
             case ANCIENT_DEBRIS -> Material.NETHERITE_SCRAP;
