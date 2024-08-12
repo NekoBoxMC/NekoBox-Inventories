@@ -2,11 +2,13 @@ package es.nekobox.nekoboxinventories.events;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -18,6 +20,7 @@ import java.util.regex.Pattern;
 
 public class BoosterEvents implements Listener {
     private final JavaPlugin plugin;
+    private Set<Location> playerPlacedBlocks = new HashSet<>();
 
     public BoosterEvents(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -88,7 +91,25 @@ public class BoosterEvents implements Listener {
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
+        if (event.isCancelled()) {
+            return; // Exit if the block break is canceled
+        }
+
         Player player = event.getPlayer();
+        Location blockLocation = event.getBlock().getLocation();
+
+        // Check if the block was placed by a player
+        if (playerPlacedBlocks.contains(blockLocation)) {
+            playerPlacedBlocks.remove(blockLocation); // Optionally remove it to free up memory
+
+            event.setDropItems(false);
+
+            // Add the block itself to the player's inventory without any multiplier
+            ItemStack dropItem = new ItemStack(event.getBlock().getType());
+            player.getInventory().addItem(dropItem);
+
+            return; // Exit as the multiplier should not apply
+        }
 
         // Check if the player is in survival mode
         if (player.getGameMode() != GameMode.SURVIVAL) {
@@ -127,16 +148,18 @@ public class BoosterEvents implements Listener {
         }
     }
 
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        playerPlacedBlocks.add(event.getBlock().getLocation());
+    }
+
     private Material getSmeltedMaterial(Material blockType) {
         return switch (blockType) {
             case IRON_ORE -> Material.IRON_INGOT;
             case GOLD_ORE -> Material.GOLD_INGOT;
             case DIAMOND_ORE -> Material.DIAMOND;
             case EMERALD_ORE -> Material.EMERALD;
-            case SAND -> Material.GLASS;
-            case COBBLESTONE -> Material.STONE;
             case ANCIENT_DEBRIS -> Material.NETHERITE_SCRAP;
-            // Add more cases as needed for other blocks
             default -> null;
         };
     }
