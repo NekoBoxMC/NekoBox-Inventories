@@ -1,10 +1,7 @@
 package es.nekobox.nekoboxinventories;
 
 import es.nekobox.nekoboxinventories.commands.*;
-import es.nekobox.nekoboxinventories.events.BoosterEvents;
-import es.nekobox.nekoboxinventories.events.DeathEvents;
-import es.nekobox.nekoboxinventories.events.GuiListener;
-import es.nekobox.nekoboxinventories.events.QuestEvents;
+import es.nekobox.nekoboxinventories.events.*;
 import es.nekobox.nekoboxinventories.utils.DataManager;
 import es.nekobox.nekoboxinventories.utils.Database;
 import es.nekobox.nekoboxinventories.utils.SaveInventory;
@@ -50,12 +47,11 @@ public final class Inventories extends JavaPlugin {
         this.getCommand("verifylink").setExecutor(new VerifyLinkCommand(this, playerCodes, db));
 
         // Events
+        getServer().getPluginManager().registerEvents(new BoosterEvents(this), this);
         getServer().getPluginManager().registerEvents(new DeathEvents(saveInventory), this);
         getServer().getPluginManager().registerEvents(new GuiListener(), this);
+        getServer().getPluginManager().registerEvents(new JoinEvents(this), this);
         //getServer().getPluginManager().registerEvents(new QuestEvents(db), this);
-        getServer().getPluginManager().registerEvents(new BoosterEvents(this), this);
-
-        scheduleDailyTask(12, 0, "nbc key giveall daily 1");
     }
 
     @Override
@@ -104,18 +100,5 @@ public final class Inventories extends JavaPlugin {
         } catch (SQLException e) {
             throw new RuntimeException("Database connection failed", e);
         }
-    }
-
-    private void scheduleDailyTask(int hour, int minute, String command) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                LocalTime now = LocalTime.now();
-                if (now.getHour() == hour && now.getMinute() == minute) {
-                    // Run the command
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-                }
-            }
-        }.runTaskTimer(this, 0, 20 * 60); // Check every minute (20 ticks per second * 60 seconds)
     }
 }
