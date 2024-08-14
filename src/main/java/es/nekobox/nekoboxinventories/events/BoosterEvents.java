@@ -99,8 +99,13 @@ public class BoosterEvents implements Listener {
         Location blockLocation = event.getBlock().getLocation();
         Material blockType = event.getBlock().getType();
 
+        if ("plots".equals(player.getWorld().getName())) {
+            event.setCancelled(true);
+            return; // Exit the method to prevent any further processing
+        }
+
         // Handle shulker boxes separately
-        if (blockType.name().endsWith("_SHULKER_BOX")) {
+        if (isShulkerBox(blockType)) {
             // Cancel the default block drop
             event.setDropItems(false);
 
@@ -168,6 +173,26 @@ public class BoosterEvents implements Listener {
             // Try to add the item to the player's inventory
             player.getInventory().addItem(resultDrop);
         }
+    }
+
+    private boolean isShulkerBox(Material material) {
+        return material == Material.SHULKER_BOX ||
+                material == Material.WHITE_SHULKER_BOX ||
+                material == Material.ORANGE_SHULKER_BOX ||
+                material == Material.MAGENTA_SHULKER_BOX ||
+                material == Material.LIGHT_BLUE_SHULKER_BOX ||
+                material == Material.YELLOW_SHULKER_BOX ||
+                material == Material.LIME_SHULKER_BOX ||
+                material == Material.PINK_SHULKER_BOX ||
+                material == Material.GRAY_SHULKER_BOX ||
+                material == Material.LIGHT_GRAY_SHULKER_BOX ||
+                material == Material.CYAN_SHULKER_BOX ||
+                material == Material.PURPLE_SHULKER_BOX ||
+                material == Material.BLUE_SHULKER_BOX ||
+                material == Material.BROWN_SHULKER_BOX ||
+                material == Material.GREEN_SHULKER_BOX ||
+                material == Material.RED_SHULKER_BOX ||
+                material == Material.BLACK_SHULKER_BOX;
     }
 
     @EventHandler
