@@ -97,6 +97,29 @@ public class BoosterEvents implements Listener {
 
         Player player = event.getPlayer();
         Location blockLocation = event.getBlock().getLocation();
+        Material blockType = event.getBlock().getType();
+
+        // Handle shulker boxes separately
+        if (blockType.name().endsWith("_SHULKER_BOX")) {
+            // Cancel the default block drop
+            event.setDropItems(false);
+
+            // Get the item representation of the shulker box, including its contents
+            ItemStack shulkerBoxItem = new ItemStack(blockType);
+            if (event.getBlock().getState() instanceof org.bukkit.block.ShulkerBox) {
+                org.bukkit.block.ShulkerBox shulkerBox = (org.bukkit.block.ShulkerBox) event.getBlock().getState();
+                shulkerBoxItem = new ItemStack(shulkerBox.getType());
+
+                org.bukkit.inventory.meta.BlockStateMeta meta = (org.bukkit.inventory.meta.BlockStateMeta) shulkerBoxItem.getItemMeta();
+                meta.setBlockState(shulkerBox);
+                shulkerBoxItem.setItemMeta(meta);
+            }
+
+            // Try to add the shulker box to the player's inventory
+            player.getInventory().addItem(shulkerBoxItem);
+
+            return; // Exit as the shulker box is handled
+        }
 
         // Check if the block was placed by a player
         if (playerPlacedBlocks.contains(blockLocation)) {
@@ -116,8 +139,7 @@ public class BoosterEvents implements Listener {
             return; // Exit the method if the player is not in survival mode
         }
 
-        // Get the block type and determine the smelted result
-        Material blockType = event.getBlock().getType();
+        // Determine the smelted result for other blocks
         Material resultType = getSmeltedMaterial(blockType);
 
         if (resultType == null) {
