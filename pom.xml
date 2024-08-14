@@ -59,8 +59,8 @@
           <url>https://oss.sonatype.org/content/groups/public/</url>
       </repository>
       <repository>
-          <id>dmulloy2-repo</id>
-          <url>https://repo.dmulloy2.net/repository/public/</url>
+          <id>viaversion-repo</id>
+          <url>https://repo.viaversion.com</url>
       </repository>
   </repositories>
 
@@ -76,10 +76,12 @@
           <artifactId>HikariCP</artifactId>
           <version>5.0.1</version>
       </dependency>
+
       <dependency>
-          <groupId>com.comphenix.protocol</groupId>
-          <artifactId>ProtocolLib</artifactId>
-          <version>4.7.0</version>
+          <groupId>com.viaversion</groupId>
+          <artifactId>viaversion-api</artifactId>
+          <version>5.0.3</version>
+          <scope>provided</scope>
       </dependency>
   </dependencies>
 </project>
