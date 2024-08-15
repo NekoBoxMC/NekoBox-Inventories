@@ -100,7 +100,6 @@ public class BoosterEvents implements Listener {
         Material blockType = event.getBlock().getType();
 
         if ("plots".equals(player.getWorld().getName())) {
-            event.setCancelled(true);
             return; // Exit the method to prevent any further processing
         }
 
