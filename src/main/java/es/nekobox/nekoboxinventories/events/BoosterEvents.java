@@ -103,6 +103,10 @@ public class BoosterEvents implements Listener {
             return; // Exit the method to prevent any further processing
         }
 
+        if (player.getGameMode() != GameMode.SURVIVAL) {
+            return; // Exit the method if the player is not in survival mode
+        }
+
         // Handle shulker boxes separately
         if (isShulkerBox(blockType)) {
             // Cancel the default block drop
@@ -136,11 +140,6 @@ public class BoosterEvents implements Listener {
             player.getInventory().addItem(dropItem);
 
             return; // Exit as the multiplier should not apply
-        }
-
-        // Check if the player is in survival mode
-        if (player.getGameMode() != GameMode.SURVIVAL) {
-            return; // Exit the method if the player is not in survival mode
         }
 
         // Determine the smelted result for other blocks
