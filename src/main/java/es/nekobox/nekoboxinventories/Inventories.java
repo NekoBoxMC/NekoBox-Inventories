@@ -5,11 +5,17 @@ import es.nekobox.nekoboxinventories.events.*;
 import es.nekobox.nekoboxinventories.utils.DataManager;
 import es.nekobox.nekoboxinventories.utils.Database;
 import es.nekobox.nekoboxinventories.utils.SaveInventory;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 public final class Inventories extends JavaPlugin {
     private static Inventories instance;
@@ -48,6 +54,9 @@ public final class Inventories extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new GuiListener(), this);
         getServer().getPluginManager().registerEvents(new JoinEvents(this), this);
         //getServer().getPluginManager().registerEvents(new QuestEvents(db), this);
+
+        // Schedule the koth command
+        scheduleKothCommand();
     }
 
     @Override
@@ -95,6 +104,34 @@ public final class Inventories extends JavaPlugin {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Database connection failed", e);
+        }
+    }
+
+    private void scheduleKothCommand() {
+        // German Time Zone
+        ZoneId zoneId = ZoneId.of("Europe/Berlin");
+
+        // Times to run the command
+        int[] hours = {0, 4, 8, 12, 16, 20};
+
+        for (int hour : hours) {
+            LocalDateTime localNow = LocalDateTime.now();
+            ZonedDateTime zonedNow = localNow.atZone(zoneId);
+            ZonedDateTime zonedNext = zonedNow.withHour(hour).withMinute(0).withSecond(0);
+
+            if (zonedNow.compareTo(zonedNext) > 0) {
+                zonedNext = zonedNext.plusDays(1);
+            }
+
+            long initialDelay = zonedNext.toInstant().toEpochMilli() - zonedNow.toInstant().toEpochMilli();
+            long period = TimeUnit.HOURS.toMillis(24);
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "koth start koth");
+                }
+            }.runTaskTimer(this, initialDelay / 50L, period / 50L);
         }
     }
 }
